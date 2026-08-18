@@ -1,7 +1,23 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
 
-let authToken = null
+export const AUTH_STORAGE_KEY = 'not-defteri-auth'
+
+// Modül yüklenir yüklenmez (React render'a başlamadan önce) localStorage'dan okunur.
+// Bu sayede sayfa yenilendiğinde/girişten hemen sonra ilk render'da mount olan
+// bileşenlerin ilk API isteği token'sız gitmiyor — token'ın set edilmesini bir
+// useEffect'e bırakmak, o effect henüz çalışmadan çocuk bileşenlerin istek atmasına
+// (ve 401 alıp anında çıkışa) yol açan bir yarış durumuydu.
+let authToken = readStoredToken()
 let onUnauthorized = null
+
+function readStoredToken() {
+  try {
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY)
+    return raw ? JSON.parse(raw)?.token ?? null : null
+  } catch {
+    return null
+  }
+}
 
 export function setAuthToken(token) {
   authToken = token
