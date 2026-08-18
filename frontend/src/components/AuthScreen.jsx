@@ -1,12 +1,17 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-export default function AuthScreen({ onLogin, onRegister, busy, authError }) {
+export default function AuthScreen({ onLogin, onRegister, busy, authError, authNotice }) {
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
 
   const isLogin = mode === 'login'
+
+  // Onay bekleyen bir kayıttan sonra kullanıcıyı giriş sekmesine geri al.
+  useEffect(() => {
+    if (authNotice) setMode('login')
+  }, [authNotice])
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -61,6 +66,11 @@ export default function AuthScreen({ onLogin, onRegister, busy, authError }) {
           </div>
         </div>
 
+        {authNotice && (
+          <div className="text-[13px] px-3 py-2 rounded-[var(--ui-radius)]" style={{ background: 'var(--ui-hover)', color: 'var(--ui-text)' }}>
+            {authNotice}
+          </div>
+        )}
         {authError && (
           <div className="text-[13px] px-3 py-2 rounded-[var(--ui-radius)]" style={{ background: 'var(--ui-accent-soft)', color: 'var(--ui-text)' }}>
             {authError}

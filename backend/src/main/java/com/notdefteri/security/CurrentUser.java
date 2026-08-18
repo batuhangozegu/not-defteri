@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-/** İstek üzerindeki giriş yapmış kullanıcının id'sine erişim için yardımcı. */
+/** İstek üzerindeki giriş yapmış kullanıcının id'sine/rolüne erişim için yardımcı. */
 @Component
 public class CurrentUser {
 
@@ -16,5 +16,11 @@ public class CurrentUser {
             throw new IllegalStateException("Kimliği doğrulanmış kullanıcı bulunamadı");
         }
         return id;
+    }
+
+    public boolean isAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 }

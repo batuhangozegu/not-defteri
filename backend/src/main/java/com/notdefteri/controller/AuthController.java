@@ -40,6 +40,7 @@ public class AuthController {
     public AuthResponse me() {
         var user = userRepository.findById(currentUser.id())
                 .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı"));
-        return new AuthResponse(null, user.getId(), user.getEmail(), user.getDisplayName());
+        return new AuthResponse(null, user.getId(), user.getEmail(), user.getDisplayName(),
+                user.getRole().name(), user.isApproved());
     }
 }

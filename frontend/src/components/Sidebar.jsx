@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { IconChevron, IconLogout, IconPanel, IconPlus, IconSearch } from './icons'
+import { IconChevron, IconLogout, IconPanel, IconPlus, IconSearch, IconShield } from './icons'
 
 function PageRow({ page, depth, activeId, expanded, onToggleExpand, onSelect }) {
   const hasKids = page.children?.length > 0
@@ -48,7 +48,7 @@ function PageRow({ page, depth, activeId, expanded, onToggleExpand, onSelect }) 
   )
 }
 
-export default function Sidebar({ tree, activeId, onSelect, onNewPage, onToggleSidebar, onSearch, userLabel, onLogout }) {
+export default function Sidebar({ tree, activeId, onSelect, onNewPage, onToggleSidebar, onSearch, userLabel, onLogout, isAdmin, onOpenAdmin }) {
   const [expanded, setExpanded] = useState({})
   const [query, setQuery] = useState('')
   const [results, setResults] = useState(null)
@@ -153,6 +153,14 @@ export default function Sidebar({ tree, activeId, onSelect, onNewPage, onToggleS
           <div className="px-1 pb-1.5 text-[12px] overflow-hidden text-ellipsis whitespace-nowrap" style={{ color: 'var(--ui-muted)' }}>
             {userLabel}
           </div>
+        )}
+        {isAdmin && (
+          <button
+            onClick={onOpenAdmin}
+            className="btn btn-ghost flex items-center gap-2 justify-start w-full text-[13px] h-[34px]"
+          >
+            <IconShield /> Kullanıcı Yönetimi
+          </button>
         )}
         <button
           onClick={onLogout}

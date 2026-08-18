@@ -16,6 +16,7 @@ function loadStored() {
 export function useAuth() {
   const [auth, setAuth] = useState(loadStored)
   const [authError, setAuthError] = useState(null)
+  const [authNotice, setAuthNotice] = useState(null)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export function useAuth() {
   async function login(email, password) {
     setBusy(true)
     setAuthError(null)
+    setAuthNotice(null)
     try {
       const res = await authApi.login(email, password)
       setAuth(res)
@@ -48,9 +50,15 @@ export function useAuth() {
   async function register(email, password, displayName) {
     setBusy(true)
     setAuthError(null)
+    setAuthNotice(null)
     try {
       const res = await authApi.register(email, password, displayName)
-      setAuth(res)
+      if (res.token) {
+        setAuth(res)
+      } else {
+        // Onay bekleyen kayıt: token yok, oturum açılmaz.
+        setAuthNotice('Kaydın alındı. Bir yönetici hesabını onayladıktan sonra giriş yapabilirsin.')
+      }
     } catch (e) {
       setAuthError(e.message)
     } finally {
@@ -58,5 +66,5 @@ export function useAuth() {
     }
   }
 
-  return { user: auth, busy, authError, login, register, logout }
+  return { user: auth, busy, authError, authNotice, login, register, logout }
 }

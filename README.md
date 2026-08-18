@@ -21,6 +21,8 @@ geliştirilmiştir: backend, frontend, Docker yapılandırması ve dokümantasyo
 - Çok kullanıcılı: kayıt/giriş (JWT), her kullanıcı sadece kendi oluşturduğu sayfaları
   görür/arar/AI ile sorgular — arama ve RAG dahil her sorgu giriş yapan kullanıcıya göre
   filtrelenir, başka bir kullanıcının notu hiçbir şekilde sızmaz
+- Onay tabanlı kayıt: ilk kayıt olan kişi otomatik yönetici olur, sonraki her kayıt bir
+  yönetici "Kullanıcı Yönetimi" panelinden onaylayana kadar giriş yapamaz
 - Hiyerarşik sayfa ağacı (sınırsız derinlikte alt sayfa), arama, sayfa oluşturma/silme
 - Blok tabanlı editör: başlık (H1-H3), paragraf, madde işareti, yapılacaklar (checkbox)
 - Sayfa kaydedildiğinde bloklar arka planda (async) embed edilip pgvector'a yazılır
@@ -72,7 +74,9 @@ docker-compose.yml
    npm run dev
    ```
 5. Tarayıcıda açılan ekranda "Kayıt Ol" sekmesinden bir hesap oluşturun — sayfalar
-   kullanıcıya özeldir, önce bir hesap gerekir.
+   kullanıcıya özeldir, önce bir hesap gerekir. **İlk kayıt olan kişi otomatik yönetici
+   olur**; ondan sonra kayıt olanlar, sol menüdeki "Kullanıcı Yönetimi" panelinden
+   yönetici onaylayana kadar giriş yapamaz.
 
 ### Her şeyi Docker Compose ile çalıştırmak
 

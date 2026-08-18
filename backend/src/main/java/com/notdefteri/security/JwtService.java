@@ -37,19 +37,25 @@ public class JwtService {
         return Jwts.builder()
                 .subject(user.getId().toString())
                 .claim("email", user.getEmail())
+                .claim("role", user.getRole().name())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(Duration.ofMinutes(expirationMinutes))))
                 .signWith(key)
                 .compact();
     }
 
-    /** Token geçerliyse kullanıcı id'sini döner, değilse boş Optional. */
-    public UUID parseUserId(String token) {
+    /** Token geçerliyse içeriğini döner, değilse null. */
+    public ParsedToken parse(String token) {
         try {
             Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
-            return UUID.fromString(claims.getSubject());
+            UUID userId = UUID.fromString(claims.getSubject());
+            String role = claims.get("role", String.class);
+            return new ParsedToken(userId, role != null ? role : "USER");
         } catch (JwtException | IllegalArgumentException e) {
             return null;
         }
+    }
+
+    public record ParsedToken(UUID userId, String role) {
     }
 }

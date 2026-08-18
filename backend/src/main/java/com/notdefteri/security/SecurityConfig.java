@@ -36,6 +36,12 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // "/api/admin/**" için rol kontrolü burada değil, AdminController içinde
+                // CurrentUser.isAdmin() ile yapılıyor: Spring Security'nin hasRole() +
+                // stateless authorizeHttpRequests kombinasyonu, authorization reddini burada
+                // (SecurityContext'i dolduran özel JwtAuthFilter ile) beklenmedik şekilde 401'e
+                // çeviriyordu (403 yerine) — controller seviyesinde açık kontrol daha
+                // öngörülebilir ve doğru durum koduyla (403) sonuçlanıyor.
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                         .anyRequest().authenticated())

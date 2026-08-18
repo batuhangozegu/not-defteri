@@ -35,6 +35,17 @@ public class User {
 
     private String displayName;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private UserRole role = UserRole.USER;
+
+    /**
+     * Bir yönetici onaylamadan giriş yapamaz (bkz. AuthService). İlk kayıt olan kullanıcı
+     * otomatik olarak ADMIN + onaylı olur, böylece uygulamayı ilk kuran kişi kilitli kalmaz.
+     */
+    @Column(nullable = false)
+    private boolean approved = false;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdAt;

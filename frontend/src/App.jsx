@@ -4,6 +4,7 @@ import Topbar from './components/Topbar'
 import PageEditor from './components/PageEditor'
 import AIPanel from './components/AIPanel'
 import AuthScreen from './components/AuthScreen'
+import AdminPanel from './components/AdminPanel'
 import { pagesApi } from './api/pages'
 import { aiApi } from './api/ai'
 import { useTheme } from './hooks/useTheme'
@@ -27,7 +28,7 @@ function flatten(nodes) {
 
 export default function App() {
   const { theme, dark, toggle: toggleTheme } = useTheme()
-  const { user, busy, authError, login, register, logout } = useAuth()
+  const { user, busy, authError, authNotice, login, register, logout } = useAuth()
 
   const wrapperProps = {
     'data-theme': theme,
@@ -38,7 +39,7 @@ export default function App() {
   if (!user) {
     return (
       <div {...wrapperProps}>
-        <AuthScreen onLogin={login} onRegister={register} busy={busy} authError={authError} />
+        <AuthScreen onLogin={login} onRegister={register} busy={busy} authError={authError} authNotice={authNotice} />
       </div>
     )
   }
@@ -65,6 +66,7 @@ function NotesApp({ user, onLogout, dark, toggleTheme }) {
   ])
   const [typing, setTyping] = useState(false)
   const [error, setError] = useState(null)
+  const [adminOpen, setAdminOpen] = useState(false)
 
   const loadTree = useCallback(async () => {
     const t = await pagesApi.tree()
@@ -155,6 +157,16 @@ function NotesApp({ user, onLogout, dark, toggleTheme }) {
           onSearch={handleSearch}
           userLabel={user.displayName || user.email}
           onLogout={onLogout}
+          isAdmin={user.role === 'ADMIN'}
+          onOpenAdmin={() => setAdminOpen(true)}
+        />
+      )}
+
+      {adminOpen && (
+        <AdminPanel
+          currentUserId={user.id}
+          onClose={() => setAdminOpen(false)}
+          onError={(msg) => setError(msg)}
         />
       )}
 

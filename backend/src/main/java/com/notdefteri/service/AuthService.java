@@ -1,10 +1,12 @@
 package com.notdefteri.service;
 
 import com.notdefteri.domain.User;
+import com.notdefteri.domain.UserRole;
 import com.notdefteri.dto.AuthResponse;
 import com.notdefteri.dto.LoginRequest;
 import com.notdefteri.dto.RegisterRequest;
 import com.notdefteri.exception.EmailAlreadyRegisteredException;
+import com.notdefteri.exception.PendingApprovalException;
 import com.notdefteri.repository.UserRepository;
 import com.notdefteri.security.JwtService;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -31,10 +33,16 @@ public class AuthService {
         if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new EmailAlreadyRegisteredException(email);
         }
+        boolean isFirstUser = userRepository.count() == 0;
+
         User user = new User();
         user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setDisplayName(request.displayName());
+        // İlk kayıt olan kişi otomatik yönetici + onaylı olur; uygulamayı kuran kişi kendi
+        // onayını bekleyip kilitli kalmasın. Sonraki tüm kayıtlar bir yönetici onayı bekler.
+        user.setRole(isFirstUser ? UserRole.ADMIN : UserRole.USER);
+        user.setApproved(isFirstUser);
         user = userRepository.saveAndFlush(user);
         return toResponse(user);
     }
@@ -46,10 +54,15 @@ public class AuthService {
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new BadCredentialsException("E-posta veya şifre hatalı");
         }
+        if (!user.isApproved()) {
+            throw new PendingApprovalException();
+        }
         return toResponse(user);
     }
 
     private AuthResponse toResponse(User user) {
-        return new AuthResponse(jwtService.generateToken(user), user.getId(), user.getEmail(), user.getDisplayName());
+        String token = user.isApproved() ? jwtService.generateToken(user) : null;
+        return new AuthResponse(token, user.getId(), user.getEmail(), user.getDisplayName(),
+                user.getRole().name(), user.isApproved());
     }
 }
