@@ -8,6 +8,7 @@ import com.notdefteri.repository.PageRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -51,6 +52,13 @@ public class EmbeddingService {
         reindexPage(event.pageId());
     }
 
+    /**
+     * readOnly transaction içinde çalışır: Page/Block'u tek, tutarlı bir okuma olarak
+     * getirip Ollama/pgvector adımlarını da aynı kapsamda yapar. Artık Block.content
+     * @Lob olmadığı için (bkz. Block.java) bu şart değil, ama iki ayrı repository
+     * çağrısını (page + blocks) tek tutarlı bir görünüme bağlamak için yine de doğru olan.
+     */
+    @Transactional(readOnly = true)
     public void reindexPage(UUID pageId) {
         try {
             Page page = pageRepository.findById(pageId).orElse(null);

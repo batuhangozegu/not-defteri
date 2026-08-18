@@ -35,7 +35,8 @@ public class PageEmbedding {
     @JoinColumn(name = "page_id", nullable = false)
     private Page page;
 
-    @Lob
+    // @Lob kasıtlı olarak yok (bkz. Block.content) — aynı "Unable to access lob stream"
+    // riskini taşır, columnDefinition zaten "text" için yeterli.
     @Column(name = "chunk_text", columnDefinition = "text")
     private String chunkText;
 

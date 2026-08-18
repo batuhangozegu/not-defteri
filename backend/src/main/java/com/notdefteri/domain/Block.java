@@ -31,7 +31,11 @@ public class Block {
     @Column(nullable = false, length = 20)
     private BlockType type;
 
-    @Lob
+    // @Lob KASITLI OLARAK yok: Hibernate'e bunu CLOB gibi ele almasını (stream olarak,
+    // sadece açık bir session/transaction içinde okunabilir) söyler. columnDefinition
+    // zaten "text" veriyor; @Lob eklemek sadece Block'u async embedding job'ında
+    // (transaction kapandıktan sonra) okumaya çalışınca "Unable to access lob stream"
+    // hatasına yol açıyordu.
     @Column(columnDefinition = "text")
     private String content;
 
