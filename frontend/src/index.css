@@ -106,7 +106,12 @@ body {
 
 /* ==========================================================================
    Bileşen sınıfları — styles.css'ten birebir taşındı
+   @layer components içinde tanımlanmazsa "layer'sız" (unlayered) sayılır ve
+   CSS Cascade Layers kuralı gereği Tailwind'in utility sınıflarını (örn. pl-8,
+   justify-start) her zaman ezer — sıra/özgüllük hiç önemli olmadan. Bu yüzden
+   burada da @layer components kullanıyoruz, tıpkı utilities gibi.
    ========================================================================== */
+@layer components {
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   cursor: pointer; text-decoration: none;
@@ -142,3 +147,4 @@ body {
 }
 .tag-accent { background: var(--color-accent-100); color: var(--color-accent-800); }
 [data-theme="dark"] .tag-accent { background: var(--ui-accent-soft); color: var(--color-accent-300); }
+} /* @layer components */

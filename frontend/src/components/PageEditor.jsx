@@ -7,7 +7,7 @@ import SelectionToolbar from './SelectionToolbar'
 let clientIdCounter = 0
 const newClientId = () => `c${Date.now()}-${clientIdCounter++}`
 
-export default function PageEditor({ pageId, onPageMetaChange, onAiTextAction }) {
+export default function PageEditor({ pageId, onPageMetaChange, onAiTextAction, onError }) {
   const [page, setPage] = useState(null)
   const [blocks, setBlocks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -28,14 +28,23 @@ export default function PageEditor({ pageId, onPageMetaChange, onAiTextAction })
     setLoading(true)
     setSlashMenu(null)
     setSelection(null)
-    Promise.all([pagesApi.get(pageId), pagesApi.blocks(pageId)]).then(([p, bs]) => {
-      if (cancelled) return
-      setPage(p)
-      setBlocks(bs.map((b) => ({ ...b, clientId: newClientId() })))
-      setLoading(false)
-      if (titleRef.current) titleRef.current.textContent = p.title || ''
-    })
+    Promise.all([pagesApi.get(pageId), pagesApi.blocks(pageId)])
+      .then(([p, bs]) => {
+        if (cancelled) return
+        setPage(p)
+        setBlocks(bs.map((b) => ({ ...b, clientId: newClientId() })))
+        setLoading(false)
+        if (titleRef.current) titleRef.current.textContent = p.title || ''
+      })
+      .catch((e) => {
+        if (cancelled) return
+        setLoading(false)
+        onError?.(`Sayfa yüklenemedi: ${e.message}`)
+      })
     return () => { cancelled = true }
+    // onError kasıtlı olarak dışarıda bırakıldı: her render'da yeni bir referans
+    // alıyor, dahil edilirse sayfa değişmeden efekt gereksiz yere tekrar çalışır.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageId])
 
   const registerRef = useCallback((clientId, el) => {
@@ -49,8 +58,12 @@ export default function PageEditor({ pageId, onPageMetaChange, onAiTextAction })
       const payload = nextBlocks.map((b) => ({
         id: b.id, type: b.type, content: b.content || '', orderIndex: b.orderIndex, checked: b.checked,
       }))
-      const saved = await pagesApi.replaceBlocks(pageId, payload)
-      setBlocks((current) => current.map((b, i) => (saved[i] ? { ...b, id: saved[i].id } : b)))
+      try {
+        const saved = await pagesApi.replaceBlocks(pageId, payload)
+        setBlocks((current) => current.map((b, i) => (saved[i] ? { ...b, id: saved[i].id } : b)))
+      } catch (e) {
+        onError?.(`Bloklar kaydedilemedi: ${e.message}`)
+      }
     }, 700)
   }
 
@@ -138,8 +151,12 @@ export default function PageEditor({ pageId, onPageMetaChange, onAiTextAction })
     setPage((p) => (p ? { ...p, title } : p))
     clearTimeout(titleSaveTimer.current)
     titleSaveTimer.current = setTimeout(async () => {
-      const updated = await pagesApi.update(pageId, { title, icon: page?.icon ?? null, parentId: page?.parentId ?? null })
-      onPageMetaChange?.(updated)
+      try {
+        const updated = await pagesApi.update(pageId, { title, icon: page?.icon ?? null, parentId: page?.parentId ?? null })
+        onPageMetaChange?.(updated)
+      } catch (e) {
+        onError?.(`Başlık kaydedilemedi: ${e.message}`)
+      }
     }, 600)
   }
 
@@ -149,6 +166,7 @@ export default function PageEditor({ pageId, onPageMetaChange, onAiTextAction })
     setPage((p) => ({ ...p, icon: next }))
     pagesApi.update(pageId, { title: page?.title || '', icon: next, parentId: page?.parentId ?? null })
       .then((updated) => onPageMetaChange?.(updated))
+      .catch((e) => onError?.(`İkon kaydedilemedi: ${e.message}`))
   }
 
   // Metin seçimi -> mini AI toolbar

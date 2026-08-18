@@ -33,6 +33,7 @@ export default function App() {
     { who: 'ai', text: 'Merhaba! Bu sayfayla ilgili soru sorabilir, metin seçip Özetle / Genişlet / Düzelt aksiyonlarını kullanabilirsin.' },
   ])
   const [typing, setTyping] = useState(false)
+  const [error, setError] = useState(null)
 
   const loadTree = useCallback(async () => {
     const t = await pagesApi.tree()
@@ -41,24 +42,39 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    loadTree().then((t) => {
-      const first = flatten(t)[0]
-      if (first) setActiveId(first.id)
-    })
+    loadTree()
+      .then((t) => {
+        const first = flatten(t)[0]
+        if (first) setActiveId(first.id)
+      })
+      .catch((e) => setError(`Sayfalar yüklenemedi: ${e.message}`))
   }, [loadTree])
 
   async function handleNewPage(parentId) {
-    const created = await pagesApi.create({ title: 'Adsız', icon: '📄', parentId })
-    await loadTree()
-    setActiveId(created.id)
+    try {
+      const created = await pagesApi.create({ title: 'Adsız', icon: '📄', parentId })
+      await loadTree()
+      setActiveId(created.id)
+    } catch (e) {
+      setError(`Sayfa oluşturulamadı: ${e.message}`)
+    }
   }
 
   async function handleSearch(query) {
-    return pagesApi.search(query)
+    try {
+      return await pagesApi.search(query)
+    } catch (e) {
+      setError(`Arama başarısız: ${e.message}`)
+      return []
+    }
   }
 
   async function handlePageMetaChange() {
-    await loadTree()
+    try {
+      await loadTree()
+    } catch (e) {
+      setError(`Sayfa listesi güncellenemedi: ${e.message}`)
+    }
   }
 
   async function askAi(question, userLabel) {
@@ -120,12 +136,22 @@ export default function App() {
           aiOpen={aiOpen}
           onToggleAi={() => setAiOpen((o) => !o)}
         />
+        {error && (
+          <div
+            className="flex items-center justify-between gap-3 px-4 py-2 text-[13px] border-b-2 flex-shrink-0"
+            style={{ background: 'var(--ui-accent-soft)', color: 'var(--ui-text)', borderColor: 'var(--ui-line)' }}
+          >
+            <span>{error}</span>
+            <button onClick={() => setError(null)} className="font-bold px-1">✕</button>
+          </div>
+        )}
         {activeId ? (
           <PageEditor
             key={activeId}
             pageId={activeId}
             onPageMetaChange={handlePageMetaChange}
             onAiTextAction={handleAiTextAction}
+            onError={(msg) => setError(msg)}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center text-[var(--ui-muted)] text-sm">
