@@ -9,5 +9,8 @@ export default defineConfig({
   envDir: '../',
   server: {
     port: 5173,
+    // Vite varsayılan olarak sadece localhost'a bağlanır; Pi/LAN üzerinden
+    // "npm run dev" ile erişilebilmesi için tüm arayüzlerde dinlesin.
+    host: true,
   },
 })
