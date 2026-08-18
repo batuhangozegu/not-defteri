@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { IconChevron, IconLogout, IconPanel, IconPlus, IconSearch, IconShield } from './icons'
+import { IconChevron, IconLogout, IconPanel, IconPlus, IconSearch, IconShield, IconTrash } from './icons'
 
-function PageRow({ page, depth, activeId, expanded, onToggleExpand, onSelect }) {
+function PageRow({ page, depth, activeId, expanded, onToggleExpand, onSelect, onDelete }) {
   const hasKids = page.children?.length > 0
   const isExpanded = !!expanded[page.id]
   const isActive = page.id === activeId
@@ -10,7 +10,7 @@ function PageRow({ page, depth, activeId, expanded, onToggleExpand, onSelect }) 
     <>
       <div
         onClick={() => onSelect(page.id)}
-        className="flex items-center gap-1.5 py-1.5 pr-2 cursor-pointer text-[13.5px] rounded-[var(--ui-radius)]"
+        className="group flex items-center gap-1.5 py-1.5 pr-2 cursor-pointer text-[13.5px] rounded-[var(--ui-radius)]"
         style={{
           paddingLeft: `${10 + depth * 18}px`,
           background: isActive ? 'var(--ui-hover)' : 'transparent',
@@ -31,7 +31,14 @@ function PageRow({ page, depth, activeId, expanded, onToggleExpand, onSelect }) 
           <span className="w-3 flex-shrink-0" />
         )}
         <span className="text-sm">{page.icon || '📄'}</span>
-        <span className="overflow-hidden text-ellipsis whitespace-nowrap">{page.title || 'Adsız'}</span>
+        <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{page.title || 'Adsız'}</span>
+        <button
+          title="Sayfayı sil"
+          onClick={(e) => { e.stopPropagation(); onDelete(page) }}
+          className="opacity-0 group-hover:opacity-100 flex-shrink-0 text-[var(--ui-muted)] hover:text-[var(--color-accent)] flex p-0.5"
+        >
+          <IconTrash />
+        </button>
       </div>
       {hasKids && isExpanded && page.children.map((child) => (
         <PageRow
@@ -42,18 +49,27 @@ function PageRow({ page, depth, activeId, expanded, onToggleExpand, onSelect }) 
           expanded={expanded}
           onToggleExpand={onToggleExpand}
           onSelect={onSelect}
+          onDelete={onDelete}
         />
       ))}
     </>
   )
 }
 
-export default function Sidebar({ tree, activeId, onSelect, onNewPage, onToggleSidebar, onSearch, userLabel, onLogout, isAdmin, onOpenAdmin }) {
+export default function Sidebar({ tree, activeId, onSelect, onNewPage, onDeletePage, onToggleSidebar, onSearch, userLabel, onLogout, isAdmin, onOpenAdmin }) {
   const [expanded, setExpanded] = useState({})
   const [query, setQuery] = useState('')
   const [results, setResults] = useState(null)
 
   const toggleExpand = (id) => setExpanded((e) => ({ ...e, [id]: !e[id] }))
+
+  function handleDelete(page) {
+    const hasKids = page.children?.length > 0
+    const msg = hasKids
+      ? `"${page.title || 'Adsız'}" ve altındaki tüm alt sayfalar silinecek. Emin misin?`
+      : `"${page.title || 'Adsız'}" silinecek. Emin misin?`
+    if (window.confirm(msg)) onDeletePage(page.id)
+  }
 
   async function handleQueryChange(e) {
     const value = e.target.value
@@ -130,6 +146,7 @@ export default function Sidebar({ tree, activeId, onSelect, onNewPage, onToggleS
                 expanded={expanded}
                 onToggleExpand={toggleExpand}
                 onSelect={onSelect}
+                onDelete={handleDelete}
               />
             ))
           )
@@ -143,6 +160,7 @@ export default function Sidebar({ tree, activeId, onSelect, onNewPage, onToggleS
               expanded={expanded}
               onToggleExpand={toggleExpand}
               onSelect={onSelect}
+              onDelete={handleDelete}
             />
           ))
         )}

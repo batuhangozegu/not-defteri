@@ -96,6 +96,21 @@ function NotesApp({ user, onLogout, dark, toggleTheme }) {
     }
   }
 
+  async function handleDeletePage(id) {
+    try {
+      await pagesApi.remove(id)
+      const t = await loadTree()
+      // Silinen sayfa (ya da onun bir alt sayfası) aktifse, aktif seçim de gitmiş olabilir.
+      const stillExists = flatten(t).some((p) => p.id === activeId)
+      if (!stillExists) {
+        const first = flatten(t)[0]
+        setActiveId(first ? first.id : null)
+      }
+    } catch (e) {
+      setError(`Sayfa silinemedi: ${e.message}`)
+    }
+  }
+
   async function handleSearch(query) {
     try {
       return await pagesApi.search(query)
@@ -153,6 +168,7 @@ function NotesApp({ user, onLogout, dark, toggleTheme }) {
           activeId={activeId}
           onSelect={setActiveId}
           onNewPage={handleNewPage}
+          onDeletePage={handleDeletePage}
           onToggleSidebar={() => setSidebarOpen(false)}
           onSearch={handleSearch}
           userLabel={user.displayName || user.email}
