@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { IconCheck, IconGrip, IconPlus, IconTrash } from './icons'
 
 const STYLE_BY_TYPE = {
@@ -9,10 +9,21 @@ const STYLE_BY_TYPE = {
 }
 
 export default function Block({
-  block, autoFocus, onChange, onEnter, onBackspaceEmpty, onSlash, onToggleChecked, onAddAfter, onDeleteBlock,
+  block, autoFocus, placeholder, onChange, onEnter, onBackspaceEmpty, onSlash, onToggleChecked, onAddAfter, onDeleteBlock,
   registerRef,
 }) {
   const ref = useRef(null)
+
+  // Callback ref (useEffect değil): blok tipi değişince (örn. "/" ile paragraftan
+  // checkbox'a) React farklı bir DOM yapısı oluşturduğu için contentEditable
+  // düğümü baştan yaratılıyor. Bir useEffect + [block.clientId] bağımlılığıyla
+  // kayıt tutulsaydı, clientId aynı kaldığı için tip değişiminde effect tekrar
+  // çalışmaz ve blockRefs eski/kopmuş düğümü göstermeye devam ederdi — slash
+  // menüsünden seçim sonrası odaklanma/yazma bu yüzden sessizce başarısız oluyordu.
+  const setRef = useCallback((el) => {
+    ref.current = el
+    registerRef?.(block.clientId, el)
+  }, [block.clientId, registerRef])
 
   useEffect(() => {
     if (ref.current && ref.current.textContent !== (block.content || '')) {
@@ -20,11 +31,6 @@ export default function Block({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  useEffect(() => {
-    registerRef?.(block.id, ref.current)
-    return () => registerRef?.(block.id, null)
-  }, [block.id, registerRef])
 
   useEffect(() => {
     if (autoFocus && ref.current) {
@@ -43,30 +49,31 @@ export default function Block({
     const text = e.currentTarget.textContent
     if (text === '/') {
       const rect = e.currentTarget.getBoundingClientRect()
-      onSlash(block.id, { x: rect.left, y: rect.bottom + 4 })
+      onSlash(block.clientId, { x: rect.left, y: rect.bottom + 4 })
     }
-    onChange(block.id, text)
+    onChange(block.clientId, text)
   }
 
   function handleKeyDown(e) {
     if (e.key === 'Enter') {
       e.preventDefault()
-      onEnter(block.id)
+      onEnter(block.clientId)
     } else if (e.key === 'Backspace' && !e.currentTarget.textContent) {
       e.preventDefault()
-      onBackspaceEmpty(block.id)
+      onBackspaceEmpty(block.clientId)
     }
   }
 
   const editable = (extraClass) => (
     <div
-      ref={ref}
+      ref={setRef}
       contentEditable
       suppressContentEditableWarning
       spellCheck={false}
       onInput={handleInput}
       onKeyDown={handleKeyDown}
-      className={`outline-none min-w-0 ${extraClass}`}
+      data-placeholder={placeholder}
+      className={`outline-none min-w-0 block-placeholder ${extraClass}`}
     />
   )
 
@@ -75,14 +82,14 @@ export default function Block({
       <div className="flex gap-0.5 w-[52px] flex-shrink-0 justify-end pr-1.5 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           title="Blok ekle"
-          onClick={() => onAddAfter(block.id)}
+          onClick={() => onAddAfter(block.clientId)}
           className="text-[var(--ui-muted)] hover:text-[var(--ui-text)] flex p-0.5"
         >
           <IconPlus />
         </button>
         <button
           title="Sil"
-          onClick={() => onDeleteBlock(block.id)}
+          onClick={() => onDeleteBlock(block.clientId)}
           className="text-[var(--ui-muted)] hover:text-[var(--ui-text)] flex p-0.5 cursor-pointer"
         >
           <IconTrash />
@@ -95,7 +102,7 @@ export default function Block({
         {block.type === 'TODO' ? (
           <div className="flex items-start gap-2.5 py-[3px] text-[15.5px] leading-[1.6]">
             <button
-              onClick={() => onToggleChecked(block.id)}
+              onClick={() => onToggleChecked(block.clientId)}
               className="w-[17px] h-[17px] flex-shrink-0 mt-[3px] flex items-center justify-center rounded-[5px] border-2"
               style={{
                 borderColor: block.checked ? 'var(--color-accent)' : 'var(--ui-muted)',

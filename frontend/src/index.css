@@ -147,4 +147,11 @@ body {
 }
 .tag-accent { background: var(--color-accent-100); color: var(--color-accent-800); }
 [data-theme="dark"] .tag-accent { background: var(--ui-accent-soft); color: var(--color-accent-300); }
+
+/* Boş bloklarda "/" ipucu (Notion tarzı) — sadece data-placeholder set edilmişse görünür. */
+.block-placeholder:empty:before {
+  content: attr(data-placeholder);
+  color: var(--ui-muted);
+  pointer-events: none;
+}
 } /* @layer components */

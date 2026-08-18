@@ -32,7 +32,11 @@ export default function PageEditor({ pageId, onPageMetaChange, onAiTextAction, o
       .then(([p, bs]) => {
         if (cancelled) return
         setPage(p)
-        setBlocks(bs.map((b) => ({ ...b, clientId: newClientId() })))
+        // Boş bir sayfada yazılacak gerçek bir blok olmazsa kullanıcı hiçbir şey
+        // yazamaz; en az bir (kaydedilmemiş, id:null) boş paragraf bloğuyla başlat.
+        setBlocks(bs.length
+          ? bs.map((b) => ({ ...b, clientId: newClientId() }))
+          : [{ clientId: newClientId(), id: null, type: 'PARAGRAPH', content: '', checked: null }])
         setLoading(false)
         if (titleRef.current) titleRef.current.textContent = p.title || ''
       })
@@ -225,17 +229,12 @@ export default function PageEditor({ pageId, onPageMetaChange, onAiTextAction, o
           {blocks.length} blok
         </div>
 
-        {blocks.length === 0 && (
-          <div className="text-[15.5px] py-1" style={{ color: 'var(--ui-muted)' }}>
-            Yazmaya başlamak için <span className="border-2 px-1.5 py-px text-[13px] font-bold rounded-[5px]" style={{ borderColor: 'var(--ui-line)', color: 'var(--ui-text)' }}>/</span> yazın
-          </div>
-        )}
-
-        {blocks.map((b) => (
+        {blocks.map((b, i) => (
           <Block
             key={b.clientId}
             block={b}
             autoFocus={b.clientId === focusClientId}
+            placeholder={blocks.length === 1 && i === 0 && b.type === 'PARAGRAPH' ? 'Yazmaya başlamak için “/” yazın…' : undefined}
             onChange={handleChange}
             onEnter={handleEnter}
             onBackspaceEmpty={handleBackspaceEmpty}
