@@ -9,7 +9,7 @@ const STYLE_BY_TYPE = {
 }
 
 export default function Block({
-  block, autoFocus, placeholder, onChange, onEnter, onBackspaceEmpty, onSlash, onToggleChecked, onAddAfter, onDeleteBlock,
+  block, autoFocus, placeholder, onChange, onEnter, onBackspaceEmpty, onSlash, onToggleChecked, onAddMenu, onDeleteBlock,
   registerRef,
 }) {
   const ref = useRef(null)
@@ -81,8 +81,11 @@ export default function Block({
     <div className="group flex items-start -ml-[52px]">
       <div className="flex gap-0.5 w-[52px] flex-shrink-0 justify-end pr-1.5 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
-          title="Blok ekle"
-          onClick={() => onAddAfter(block.clientId)}
+          title="Blok ekle (tip seç)"
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect()
+            onAddMenu(block.clientId, { x: rect.left, y: rect.bottom + 4 })
+          }}
           className="text-[var(--ui-muted)] hover:text-[var(--ui-text)] flex p-0.5"
         >
           <IconPlus />

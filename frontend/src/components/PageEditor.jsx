@@ -98,8 +98,18 @@ export default function PageEditor({ pageId, onPageMetaChange, onAiTextAction, o
     })
   }
 
-  function handleAddAfter(clientId) {
-    handleEnter(clientId)
+  // Hover'daki "+" butonuna tıklayınca: yeni bir blok ekle VE hangi tipte olacağını
+  // sormak için doğrudan "/" menüsünü aç — "/" yazmayı bilmeyen kullanıcı için de
+  // madde işareti/checkbox/başlık seçimi görünür ve tıklanabilir olsun diye.
+  function handleAddMenu(clientId, pos) {
+    updateBlocks((current) => {
+      const idx = current.findIndex((b) => b.clientId === clientId)
+      const created = { clientId: newClientId(), id: null, type: 'PARAGRAPH', content: '', checked: null }
+      const next = [...current]
+      next.splice(idx + 1, 0, created)
+      setSlashMenu({ blockId: created.clientId, x: pos.x, y: pos.y })
+      return next
+    })
   }
 
   function focusBlockEnd(clientId) {
@@ -234,13 +244,15 @@ export default function PageEditor({ pageId, onPageMetaChange, onAiTextAction, o
             key={b.clientId}
             block={b}
             autoFocus={b.clientId === focusClientId}
-            placeholder={blocks.length === 1 && i === 0 && b.type === 'PARAGRAPH' ? 'Yazmaya başlamak için “/” yazın…' : undefined}
+            placeholder={b.type === 'PARAGRAPH' && !b.content
+              ? (blocks.length === 1 && i === 0 ? 'Yazmaya başlamak için “/” yazın…' : 'Yazın, ya da blok tipi için “/” kullanın…')
+              : undefined}
             onChange={handleChange}
             onEnter={handleEnter}
             onBackspaceEmpty={handleBackspaceEmpty}
             onSlash={(id, pos) => setSlashMenu({ blockId: id, ...pos })}
             onToggleChecked={handleToggleChecked}
-            onAddAfter={handleAddAfter}
+            onAddMenu={handleAddMenu}
             onDeleteBlock={handleDeleteBlock}
             registerRef={registerRef}
           />
