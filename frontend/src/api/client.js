@@ -1,10 +1,27 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
 
+let authToken = null
+let onUnauthorized = null
+
+export function setAuthToken(token) {
+  authToken = token
+}
+
+/** 401 (geçersiz/süresi dolmuş token) alındığında çağrılacak fonksiyonu kaydeder. */
+export function setUnauthorizedHandler(fn) {
+  onUnauthorized = fn
+}
+
 async function request(path, options = {}) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
-  })
+  const headers = { 'Content-Type': 'application/json', ...options.headers }
+  if (authToken) headers.Authorization = `Bearer ${authToken}`
+
+  const res = await fetch(`${BASE_URL}${path}`, { headers, ...options })
+
+  if (res.status === 401) {
+    onUnauthorized?.()
+  }
+
   if (!res.ok) {
     let message = `İstek başarısız: ${res.status}`
     try {

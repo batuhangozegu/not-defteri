@@ -3,9 +3,11 @@ import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import PageEditor from './components/PageEditor'
 import AIPanel from './components/AIPanel'
+import AuthScreen from './components/AuthScreen'
 import { pagesApi } from './api/pages'
 import { aiApi } from './api/ai'
 import { useTheme } from './hooks/useTheme'
+import { useAuth } from './hooks/useAuth'
 
 const ACTION_LABELS = { summarize: 'Özetle', expand: 'Genişlet', fix: 'Düzelt' }
 
@@ -25,6 +27,35 @@ function flatten(nodes) {
 
 export default function App() {
   const { theme, dark, toggle: toggleTheme } = useTheme()
+  const { user, busy, authError, login, register, logout } = useAuth()
+
+  const wrapperProps = {
+    'data-theme': theme,
+    className: 'h-screen overflow-hidden',
+    style: { background: 'var(--ui-bg)', color: 'var(--ui-text)', fontFamily: 'var(--font-body)' },
+  }
+
+  if (!user) {
+    return (
+      <div {...wrapperProps}>
+        <AuthScreen onLogin={login} onRegister={register} busy={busy} authError={authError} />
+      </div>
+    )
+  }
+
+  return (
+    <div {...wrapperProps}>
+      <NotesApp
+        user={user}
+        onLogout={logout}
+        dark={dark}
+        toggleTheme={toggleTheme}
+      />
+    </div>
+  )
+}
+
+function NotesApp({ user, onLogout, dark, toggleTheme }) {
   const [tree, setTree] = useState([])
   const [activeId, setActiveId] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -42,13 +73,16 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    setActiveId(null)
     loadTree()
       .then((t) => {
         const first = flatten(t)[0]
         if (first) setActiveId(first.id)
       })
       .catch((e) => setError(`Sayfalar yüklenemedi: ${e.message}`))
-  }, [loadTree])
+    // Kullanıcı değişirse (logout/login) sıfırdan yükle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.id, loadTree])
 
   async function handleNewPage(parentId) {
     try {
@@ -110,11 +144,7 @@ export default function App() {
   const breadcrumb = path ? path.map((p) => p.title || 'Adsız').join(' / ') : ''
 
   return (
-    <div
-      data-theme={theme}
-      className="flex h-screen overflow-hidden"
-      style={{ background: 'var(--ui-bg)', color: 'var(--ui-text)', fontFamily: 'var(--font-body)' }}
-    >
+    <div className="flex h-full overflow-hidden">
       {sidebarOpen && (
         <Sidebar
           tree={tree}
@@ -123,6 +153,8 @@ export default function App() {
           onNewPage={handleNewPage}
           onToggleSidebar={() => setSidebarOpen(false)}
           onSearch={handleSearch}
+          userLabel={user.displayName || user.email}
+          onLogout={onLogout}
         />
       )}
 

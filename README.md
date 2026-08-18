@@ -18,6 +18,9 @@ geliştirilmiştir: backend, frontend, Docker yapılandırması ve dokümantasyo
 
 ## Özellikler
 
+- Çok kullanıcılı: kayıt/giriş (JWT), her kullanıcı sadece kendi oluşturduğu sayfaları
+  görür/arar/AI ile sorgular — arama ve RAG dahil her sorgu giriş yapan kullanıcıya göre
+  filtrelenir, başka bir kullanıcının notu hiçbir şekilde sızmaz
 - Hiyerarşik sayfa ağacı (sınırsız derinlikte alt sayfa), arama, sayfa oluşturma/silme
 - Blok tabanlı editör: başlık (H1-H3), paragraf, madde işareti, yapılacaklar (checkbox)
 - Sayfa kaydedildiğinde bloklar arka planda (async) embed edilip pgvector'a yazılır
@@ -48,7 +51,10 @@ docker-compose.yml
 ### Adımlar
 
 1. `.env.example` dosyasını `.env` olarak kopyalayın ve gerçek değerleri girin (bu dosya
-   asla commit edilmez).
+   asla commit edilmez). `JWT_SECRET` için en az 32 karakterlik rastgele bir değer üretin:
+   ```
+   openssl rand -base64 32
+   ```
 2. Sadece veritabanını Docker ile ayağa kaldırın:
    ```
    docker compose up -d postgres
@@ -65,6 +71,8 @@ docker-compose.yml
    npm install
    npm run dev
    ```
+5. Tarayıcıda açılan ekranda "Kayıt Ol" sekmesinden bir hesap oluşturun — sayfalar
+   kullanıcıya özeldir, önce bir hesap gerekir.
 
 ### Her şeyi Docker Compose ile çalıştırmak
 
