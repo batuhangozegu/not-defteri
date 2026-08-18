@@ -1,0 +1,28 @@
+# Ortam değişkenleri / gizli değerler
+.env
+.env.*
+!.env.example
+application-local.yml
+application-local.yaml
+
+# Backend (Maven)
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+*.log
+*.jar
+*.war
+
+# Frontend (Node)
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Docker
+docker/data/

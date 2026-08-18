@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: backend
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/notdefteri}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  sql:
+    init:
+      mode: always
+
+server:
+  port: ${SERVER_PORT:8080}
+
+# Gerçek değerler (API anahtarı, DB parolası vb.) HİÇBİR ZAMAN buraya yazılmaz;
+# hepsi ortam değişkeninden okunur. Yerelde çalıştırmak için proje kökündeki
+# .env.example dosyasını .env olarak kopyalayıp gerçek değerleri gir.
+app:
+  ollama:
+    base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+    embedding-model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text}
+  gemini:
+    api-key: ${GEMINI_API_KEY}
+    model: ${GEMINI_MODEL:gemini-3-flash-preview}
+
+logging:
+  level:
+    com.notdefteri: INFO
