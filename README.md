@@ -85,6 +85,8 @@ ile) yapılacak kurulumun dokümantasyonudur:
 - [ ] `docker compose up -d` ile postgres + backend + frontend servislerinin başlatılması
 - [ ] Backend'in `OLLAMA_BASE_URL` değerinin Pi'nin yerel ağ adresine göre ayarlanması
       (örn. `http://raspberrypi.local:11434` ya da Pi'nin sabit LAN IP'si)
+- [ ] Frontend'in `VITE_API_BASE_URL` değerinin (build-time) Pi'nin LAN adresine göre
+      ayarlanması, aksi halde tarayıcı `localhost`'a istek atmaya çalışır
 - [ ] Gerekirse ters proxy / dış erişim (Tailscale, Caddy vb.) yapılandırılması
 
 ## Güvenlik
