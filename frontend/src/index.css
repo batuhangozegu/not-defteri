@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap');
+@import "tailwindcss";
+
+/* data-theme="dark" olan en yakın atadan itibaren dark: varyantını etkinleştirir
+   (Tailwind'in class tabanlı .dark stratejisi yerine, tasarımın kullandığı
+   data-theme attribute'una uyumlu). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* --font-* burada tanımlanınca Tailwind otomatik olarak font-heading / font-body
+   utility sınıflarını üretir. */
+@theme {
+  --font-heading: "Archivo", system-ui, sans-serif;
+  --font-body: "Archivo", system-ui, sans-serif;
+}
+
+/* ==========================================================================
+   Tasarım sistemi token'ları — Modernist (Claude Design importundan alındı)
+   Kaynak: _ds/modernist-.../styles.css
+   ========================================================================== */
+:root {
+  --color-bg: #f3f2f2;
+  --color-surface: #eae9e9;
+  --color-text: #201e1d;
+  --color-accent: #ec3013;
+  --color-accent-2: #e15b47;
+  --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
+
+  --color-neutral-100: #f8f4f4;
+  --color-neutral-200: #eae7e7;
+  --color-neutral-300: #d7d3d3;
+  --color-neutral-400: #bab6b6;
+  --color-neutral-500: #9b9797;
+  --color-neutral-600: #7d7979;
+  --color-neutral-700: #605d5d;
+  --color-neutral-800: #444141;
+  --color-neutral-900: #2d2b2b;
+
+  --color-accent-100: #fff2ef;
+  --color-accent-200: #ffe0d9;
+  --color-accent-300: #ffc4b8;
+  --color-accent-400: #ff9783;
+  --color-accent-500: #ff563c;
+  --color-accent-600: #dd2b0f;
+  --color-accent-700: #ae1800;
+  --color-accent-800: #7c1405;
+  --color-accent-900: #4d170e;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent);
+  --shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
+  --shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
+
+  /* Uygulamaya özel UI katmanı — açık tema */
+  --ui-bg: var(--color-bg);
+  --ui-surface: #faf9f9;
+  --ui-text: var(--color-text);
+  --ui-muted: var(--color-neutral-600);
+  --ui-border: var(--color-divider);
+  --ui-line: var(--color-neutral-200);
+  --ui-hover: var(--color-neutral-100);
+  --ui-accent-soft: var(--color-accent-100);
+  --ui-radius: 8px;
+}
+
+[data-theme="dark"] {
+  --ui-bg: #1e1c1b;
+  --ui-surface: #242220;
+  --ui-text: #d9d5d2;
+  --ui-muted: #8f8a86;
+  --ui-border: #454140;
+  --ui-line: #38342f;
+  --ui-hover: #2c2927;
+  --ui-accent-soft: #3f130a;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font-family: var(--font-body);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@keyframes typingDot {
+  0%, 60%, 100% { opacity: .25; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+/* ==========================================================================
+   Bileşen sınıfları — styles.css'ten birebir taşındı
+   ========================================================================== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; text-decoration: none;
+  font-family: var(--font-heading); font-weight: 800;
+  font-size: 14px; line-height: 1.2; color: var(--ui-text);
+  background: transparent; border: 1px solid transparent;
+  padding: var(--space-2) calc(var(--space-3) * 1.2);
+  border-radius: var(--ui-radius);
+}
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-primary { background: var(--color-accent); color: #fff; }
+.btn-primary:hover { background: var(--color-accent-600); }
+.btn-primary:active { background: var(--color-accent-700); }
+.btn-secondary { border-color: var(--ui-border); color: var(--ui-text); }
+.btn-secondary:hover { background: var(--ui-hover); }
+.btn-ghost { color: var(--color-accent); padding-inline: var(--space-1); }
+.btn-ghost:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+.btn-block { width: 100%; justify-content: flex-start; text-align: left; }
+
+.input {
+  width: 100%; min-height: 36px; padding: 6px 10px; font: inherit;
+  font-size: 14px; color: var(--ui-text); caret-color: var(--color-accent);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border); border-radius: var(--ui-radius);
+}
+.input::placeholder { color: var(--ui-muted); }
+.input:hover { border-color: color-mix(in srgb, var(--ui-text) 45%, transparent); }
+.input:focus-visible { border-color: var(--color-accent); outline-offset: 0; }
+
+.tag {
+  display: inline-flex; align-items: center; font-size: 11px;
+  letter-spacing: .02em; padding: 3px 10px; border-radius: 6px;
+}
+.tag-accent { background: var(--color-accent-100); color: var(--color-accent-800); }
+[data-theme="dark"] .tag-accent { background: var(--ui-accent-soft); color: var(--color-accent-300); }
