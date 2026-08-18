@@ -11,6 +11,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * Authorization header'ı ile (cookie/credential yok) doğrulama yaptığı için wildcard origin
  * güvenlik açısından sorun oluşturmaz, ve kişisel/LAN kullanımda (örn. Raspberry Pi) hangi
  * adresten erişileceği önceden bilinmeyebilir.
+ *
+ * allowPrivateNetwork(true): Chrome'un Private Network Access (RFC1918) politikası,
+ * HTTPS olmayan bir sayfadan (örn. Pi'nin http://xxx.local:5173 frontend'i) "daha özel"
+ * bir adres alanındaki (örn. aynı Pi'nin 8080 portu) bir kaynağa istek atarken, hedefin
+ * preflight yanıtında bunu açıkça izin vermesini şart koşuyor — aksi halde
+ * "not a secure context and the resource is in more-private address space" hatasıyla
+ * engelleniyor. Bu olmadan LAN/Pi üzerinden .local adresiyle erişim çalışmaz.
  */
 @Configuration
 @EnableConfigurationProperties(AppProperties.class)
@@ -30,6 +37,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/api/**")
                 .allowedOriginPatterns(allowed.split("\\s*,\\s*"))
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-                .allowedHeaders("*");
+                .allowedHeaders("*")
+                .allowPrivateNetwork(true);
     }
 }
