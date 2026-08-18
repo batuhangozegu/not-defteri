@@ -2,6 +2,7 @@ package com.notdefteri.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -43,6 +44,11 @@ public class SecurityConfig {
                 // çeviriyordu (403 yerine) — controller seviyesinde açık kontrol daha
                 // öngörülebilir ve doğru durum koduyla (403) sonuçlanıyor.
                 .authorizeHttpRequests(auth -> auth
+                        // CORS preflight (OPTIONS) hiçbir zaman Authorization header'ı taşımaz;
+                        // burada permitAll olmazsa aşağıdaki anyRequest().authenticated() kuralı
+                        // preflight'ı da 401'e düşürür, tarayıcı da asıl isteği hiç göndermeden
+                        // "CORS request did not succeed" hatası verir.
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(eh -> eh
