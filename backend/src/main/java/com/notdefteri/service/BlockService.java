@@ -6,6 +6,7 @@ import com.notdefteri.dto.BlockDto;
 import com.notdefteri.exception.NotFoundException;
 import com.notdefteri.repository.BlockRepository;
 import com.notdefteri.repository.PageRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,13 +20,13 @@ public class BlockService {
 
     private final BlockRepository blockRepository;
     private final PageRepository pageRepository;
-    private final EmbeddingService embeddingService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public BlockService(BlockRepository blockRepository, PageRepository pageRepository,
-                         EmbeddingService embeddingService) {
+                         ApplicationEventPublisher eventPublisher) {
         this.blockRepository = blockRepository;
         this.pageRepository = pageRepository;
-        this.embeddingService = embeddingService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional(readOnly = true)
@@ -67,7 +68,7 @@ public class BlockService {
                 .filter(b -> !keepIds.contains(b.getId()))
                 .forEach(blockRepository::delete);
 
-        embeddingService.reindexPage(pageId);
+        eventPublisher.publishEvent(new PageChangedEvent(pageId));
         return saved.stream().map(this::toDto).toList();
     }
 
@@ -79,7 +80,7 @@ public class BlockService {
             throw new NotFoundException("Blok bu sayfaya ait değil: " + blockId);
         }
         blockRepository.delete(block);
-        embeddingService.reindexPage(pageId);
+        eventPublisher.publishEvent(new PageChangedEvent(pageId));
     }
 
     private BlockDto toDto(Block block) {

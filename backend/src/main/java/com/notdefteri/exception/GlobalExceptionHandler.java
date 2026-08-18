@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -30,6 +31,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(errorBody(ex.getMessage()));
+    }
+
+    @ExceptionHandler(WebClientResponseException.class)
+    public ResponseEntity<Map<String, Object>> handleUpstream(WebClientResponseException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(errorBody("Dış AI servisi hata döndü (" + ex.getStatusCode().value() + "). " +
+                        "GEMINI_API_KEY / OLLAMA_BASE_URL değerlerini kontrol edin."));
     }
 
     private Map<String, Object> errorBody(String message) {

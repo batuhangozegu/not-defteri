@@ -8,6 +8,8 @@ import com.notdefteri.repository.PageRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +19,10 @@ import java.util.UUID;
  * Bir sayfa kaydedildiğinde/güncellendiğinde blokların metnini parçalara (chunk) ayırıp
  * Ollama ile embed eder ve pgvector tablosuna yazar. Bu iş sayfa kaydını yavaşlatmamak için
  * arka planda (async) çalışır; embedding üretimi başarısız olsa da sayfa/blok kaydı etkilenmez.
+ *
+ * {@link #onPageChanged} bir {@link TransactionalEventListener} olarak, ilgili transaction
+ * COMMIT olduktan SONRA tetiklenir — aksi halde arka plan iş parçacığı henüz commit
+ * edilmemiş sayfayı/blokları göremeyip sessizce hiçbir şey yapmayabilir.
  */
 @Service
 @Slf4j
@@ -40,6 +46,11 @@ public class EmbeddingService {
     }
 
     @Async("embeddingTaskExecutor")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onPageChanged(PageChangedEvent event) {
+        reindexPage(event.pageId());
+    }
+
     public void reindexPage(UUID pageId) {
         try {
             Page page = pageRepository.findById(pageId).orElse(null);

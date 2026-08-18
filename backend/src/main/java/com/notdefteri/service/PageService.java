@@ -8,6 +8,7 @@ import com.notdefteri.exception.NotFoundException;
 import com.notdefteri.repository.BlockRepository;
 import com.notdefteri.repository.PageEmbeddingRepository;
 import com.notdefteri.repository.PageRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,16 +22,16 @@ public class PageService {
     private final PageRepository pageRepository;
     private final BlockRepository blockRepository;
     private final PageEmbeddingRepository pageEmbeddingRepository;
-    private final EmbeddingService embeddingService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public PageService(PageRepository pageRepository,
                         BlockRepository blockRepository,
                         PageEmbeddingRepository pageEmbeddingRepository,
-                        EmbeddingService embeddingService) {
+                        ApplicationEventPublisher eventPublisher) {
         this.pageRepository = pageRepository;
         this.blockRepository = blockRepository;
         this.pageEmbeddingRepository = pageEmbeddingRepository;
-        this.embeddingService = embeddingService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional(readOnly = true)
@@ -60,8 +61,8 @@ public class PageService {
         if (request.parentId() != null) {
             page.setParent(findOrThrow(request.parentId()));
         }
-        page = pageRepository.save(page);
-        embeddingService.reindexPage(page.getId());
+        page = pageRepository.saveAndFlush(page);
+        eventPublisher.publishEvent(new PageChangedEvent(page.getId()));
         return toResponse(page);
     }
 
@@ -75,8 +76,8 @@ public class PageService {
         } else if (!request.parentId().equals(id)) {
             page.setParent(findOrThrow(request.parentId()));
         }
-        page = pageRepository.save(page);
-        embeddingService.reindexPage(page.getId());
+        page = pageRepository.saveAndFlush(page);
+        eventPublisher.publishEvent(new PageChangedEvent(page.getId()));
         return toResponse(page);
     }
 
