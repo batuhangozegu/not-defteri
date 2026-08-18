@@ -6,6 +6,7 @@ import com.notdefteri.repository.PageEmbeddingRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Basit bir RAG akışı: soruyu embed et, pgvector ile en alakalı parçaları bul,
@@ -28,9 +29,9 @@ public class RagService {
         this.geminiClient = geminiClient;
     }
 
-    public AskResponse ask(String question) {
+    public AskResponse ask(UUID ownerId, String question) {
         float[] questionEmbedding = ollamaEmbeddingClient.embed(question);
-        List<SimilarChunkDto> matches = pageEmbeddingRepository.findMostSimilar(questionEmbedding, TOP_K);
+        List<SimilarChunkDto> matches = pageEmbeddingRepository.findMostSimilar(ownerId, questionEmbedding, TOP_K);
 
         if (matches.isEmpty()) {
             return new AskResponse(

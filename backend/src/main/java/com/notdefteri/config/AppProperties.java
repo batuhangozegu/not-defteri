@@ -7,11 +7,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * bu sınıfta veya application.yml içinde hiçbir gerçek anahtar/parola bulunmaz.
  */
 @ConfigurationProperties(prefix = "app")
-public record AppProperties(Ollama ollama, Gemini gemini) {
+public record AppProperties(Ollama ollama, Gemini gemini, Jwt jwt) {
 
     public record Ollama(String baseUrl, String embeddingModel) {
     }
 
     public record Gemini(String apiKey, String model) {
+    }
+
+    public record Jwt(String secret, long expirationMinutes) {
     }
 }

@@ -4,6 +4,7 @@ import com.notdefteri.dto.AiTextRequest;
 import com.notdefteri.dto.AiTextResponse;
 import com.notdefteri.dto.AskRequest;
 import com.notdefteri.dto.AskResponse;
+import com.notdefteri.security.CurrentUser;
 import com.notdefteri.service.AiTextService;
 import com.notdefteri.service.RagService;
 import jakarta.validation.Valid;
@@ -19,10 +20,12 @@ public class AiController {
 
     private final AiTextService aiTextService;
     private final RagService ragService;
+    private final CurrentUser currentUser;
 
-    public AiController(AiTextService aiTextService, RagService ragService) {
+    public AiController(AiTextService aiTextService, RagService ragService, CurrentUser currentUser) {
         this.aiTextService = aiTextService;
         this.ragService = ragService;
+        this.currentUser = currentUser;
     }
 
     @PostMapping("/summarize")
@@ -42,6 +45,6 @@ public class AiController {
 
     @PostMapping("/ask")
     public AskResponse ask(@Valid @RequestBody AskRequest request) {
-        return ragService.ask(request.question());
+        return ragService.ask(currentUser.id(), request.question());
     }
 }

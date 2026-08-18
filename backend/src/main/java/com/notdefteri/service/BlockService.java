@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+/** Her metod önce sayfanın {@code ownerId}'ye ait olduğunu doğrular (bkz. {@link #findPageOrThrow}). */
 @Service
 public class BlockService {
 
@@ -30,7 +31,8 @@ public class BlockService {
     }
 
     @Transactional(readOnly = true)
-    public List<BlockDto> getBlocks(UUID pageId) {
+    public List<BlockDto> getBlocks(UUID ownerId, UUID pageId) {
+        findPageOrThrow(ownerId, pageId);
         return blockRepository.findByPageIdOrderByOrderIndexAsc(pageId).stream()
                 .map(this::toDto)
                 .toList();
@@ -42,9 +44,8 @@ public class BlockService {
      * İşlem bitince embedding'i arka planda yeniden üretir.
      */
     @Transactional
-    public List<BlockDto> replaceBlocks(UUID pageId, List<BlockDto> incoming) {
-        Page page = pageRepository.findById(pageId)
-                .orElseThrow(() -> new NotFoundException("Sayfa bulunamadı: " + pageId));
+    public List<BlockDto> replaceBlocks(UUID ownerId, UUID pageId, List<BlockDto> incoming) {
+        Page page = findPageOrThrow(ownerId, pageId);
 
         List<Block> existing = blockRepository.findByPageIdOrderByOrderIndexAsc(pageId);
         Set<UUID> keepIds = new HashSet<>();
@@ -73,7 +74,8 @@ public class BlockService {
     }
 
     @Transactional
-    public void deleteBlock(UUID pageId, UUID blockId) {
+    public void deleteBlock(UUID ownerId, UUID pageId, UUID blockId) {
+        findPageOrThrow(ownerId, pageId);
         Block block = blockRepository.findById(blockId)
                 .orElseThrow(() -> new NotFoundException("Blok bulunamadı: " + blockId));
         if (!block.getPage().getId().equals(pageId)) {
@@ -81,6 +83,11 @@ public class BlockService {
         }
         blockRepository.delete(block);
         eventPublisher.publishEvent(new PageChangedEvent(pageId));
+    }
+
+    private Page findPageOrThrow(UUID ownerId, UUID pageId) {
+        return pageRepository.findByIdAndOwnerId(pageId, ownerId)
+                .orElseThrow(() -> new NotFoundException("Sayfa bulunamadı: " + pageId));
     }
 
     private BlockDto toDto(Block block) {

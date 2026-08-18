@@ -37,12 +37,15 @@ public class PageEmbeddingRepository {
     }
 
     /**
-     * Cosine mesafesine (pgvector "<=>" operatörü) göre en yakın {@code limit} parçayı döner.
+     * Cosine mesafesine (pgvector "<=>" operatörü) göre, SADECE {@code ownerId} kullanıcısına
+     * ait sayfalar arasında en yakın {@code limit} parçayı döner. Bu filtre olmadan bir
+     * kullanıcının sorusu başka bir kullanıcının notlarından bağlam sızdırabilir.
      */
-    public List<SimilarChunkDto> findMostSimilar(float[] questionEmbedding, int limit) {
+    public List<SimilarChunkDto> findMostSimilar(UUID ownerId, float[] questionEmbedding, int limit) {
         return jdbcTemplate.query(
                 "SELECT pe.page_id, p.title, pe.chunk_text, (pe.embedding <=> ?) AS distance " +
                         "FROM page_embedding pe JOIN page p ON p.id = pe.page_id " +
+                        "WHERE p.owner_id = ? " +
                         "ORDER BY pe.embedding <=> ? " +
                         "LIMIT ?",
                 (rs, rowNum) -> new SimilarChunkDto(
@@ -50,7 +53,7 @@ public class PageEmbeddingRepository {
                         rs.getString("title"),
                         rs.getString("chunk_text"),
                         rs.getDouble("distance")),
-                toPgVector(questionEmbedding), toPgVector(questionEmbedding), limit);
+                toPgVector(questionEmbedding), ownerId, toPgVector(questionEmbedding), limit);
     }
 
     private PGobject toPgVector(float[] embedding) {

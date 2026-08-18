@@ -36,6 +36,11 @@ public class Page {
     @JoinColumn(name = "parent_id")
     private Page parent;
 
+    /** Sayfanın sahibi; her kullanıcı sadece kendi sayfalarını görür/arar/AI ile sorgular. */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private User owner;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
